@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sizer/sizer.dart';
-
 import '../../core/app_export.dart';
 
 /// Login Screen for Radha Naam Japa devotional application
@@ -15,8 +15,9 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
-  );
+  scopes: ['email', 'profile'],
+  serverClientId: '306534060670-39kiko3rcf8hogq3rfbbne6g666p7ejq.apps.googleusercontent.com', // Paste your actual web client ID here
+);
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -276,15 +277,25 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final GoogleSignInAccount? account = await _googleSignIn.signIn();
+      // Sign in with Google
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser != null) {
+        // Get authentication details
+        final GoogleSignInAuthentication googleAuth = 
+            await googleUser.authentication;
 
-      if (account != null) {
-        // Successful sign-in
+        // Create Firebase credential
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        // Sign in to Firebase with the credential
+        await FirebaseAuth.instance.signInWithCredential(credential);
+        
         if (mounted) {
-          // Provide haptic feedback
           _showSuccessFeedback();
-
-          // Navigate to home screen
           await Future.delayed(const Duration(milliseconds: 300));
           if (mounted) {
             Navigator.pushReplacementNamed(context, '/home-screen');

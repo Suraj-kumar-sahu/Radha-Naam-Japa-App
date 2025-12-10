@@ -184,22 +184,21 @@ class _CountingScreenState extends State<CountingScreen>
     );
   }
 
-  /// Save session and navigate to summary
+  /// Save session and return to caller with session data
   void _saveSession() {
     final malas = _currentCount ~/ 108;
     final remainingJapas = _currentCount % 108;
 
-    Navigator.pushReplacementNamed(
-      context,
-      '/japa-summary-screen',
-      arguments: {
-        'totalCount': _currentCount,
-        'malas': malas,
-        'remainingJapas': remainingJapas,
-        'duration': _sessionDuration,
-        'timestamp': DateTime.now().toIso8601String(),
-      },
-    );
+    final sessionData = {
+      'totalCount': _currentCount,
+      'malas': malas,
+      'remainingJapas': remainingJapas,
+      'duration': _sessionDuration,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+
+    // Return the session data to whoever pushed CountingScreen
+    Navigator.pop(context, sessionData);
   }
 
   @override

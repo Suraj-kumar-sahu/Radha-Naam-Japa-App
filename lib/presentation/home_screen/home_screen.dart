@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/app_export.dart';
 import '../../widgets/custom_app_bar.dart';
@@ -19,6 +22,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Preference key
+  static const String _prefsSessionHistoryKey = 'japa_session_history';
+
   // Mock user data
   final String _userName = 'Devotee';
   int _todayCount = 0;
@@ -26,56 +32,138 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   bool _isOffline = false;
 
-  // Mock session history data
-  final List<Map<String, dynamic>> _sessionHistory = [
-    {
-      'id': 1,
-      'date': DateTime.now().subtract(const Duration(days: 1)),
-      'count': 1296,
-      'duration': 45,
-    },
-    {
-      'id': 2,
-      'date': DateTime.now().subtract(const Duration(days: 2)),
-      'count': 1080,
-      'duration': 40,
-    },
-    {
-      'id': 3,
-      'date': DateTime.now().subtract(const Duration(days: 3)),
-      'count': 864,
-      'duration': 32,
-    },
-    {
-      'id': 4,
-      'date': DateTime.now().subtract(const Duration(days: 4)),
-      'count': 1512,
-      'duration': 55,
-    },
-    {
-      'id': 5,
-      'date': DateTime.now().subtract(const Duration(days: 5)),
-      'count': 1080,
-      'duration': 42,
-    },
-  ];
+  // Session history stored as list of maps:
+  // { 'id': int, 'date': DateTime, 'count': int, 'duration': String }
+  final List<Map<String, dynamic>> _sessionHistory = [];
 
   @override
   void initState() {
     super.initState();
-    _loadTodayData();
+    _loadFromPrefs();
   }
 
-  Future<void> _loadTodayData() async {
+  /// Load persisted session history and compute today's count.
+  Future<void> _loadFromPrefs() async {
     setState(() => _isLoading = true);
 
-    // Simulate loading today's data
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final sessionsJson = prefs.getString(_prefsSessionHistoryKey);
+      _sessionHistory.clear();
 
-    setState(() {
-      _todayCount = 0; // Reset for new day
-      _isLoading = false;
-    });
+      if (sessionsJson != null && sessionsJson.isNotEmpty) {
+        final List<dynamic> decodedList = jsonDecode(sessionsJson);
+        for (final item in decodedList) {
+          if (item is Map<String, dynamic>) {
+            final id = item['id'] is int ? item['id'] as int : int.tryParse(item['id']?.toString() ?? '') ?? 0;
+            final dateStr = item['date']?.toString() ?? '';
+            final date = DateTime.tryParse(dateStr) ?? DateTime.now();
+            final count = item['count'] is int ? item['count'] as int : int.tryParse(item['count']?.toString() ?? '') ?? 0;
+            final duration = item['duration']?.toString() ?? '';
+
+            _sessionHistory.add({
+              'id': id,
+              'date': date,
+              'count': count,
+              'duration': duration,
+            });
+          } else if (item is Map) {
+            // fallback for dynamic maps
+            final id = item['id'] ?? 0;
+            final dateStr = item['date']?.toString() ?? '';
+            final date = DateTime.tryParse(dateStr) ?? DateTime.now();
+            final count = item['count'] ?? 0;
+            final duration = item['duration']?.toString() ?? '';
+
+            _sessionHistory.add({
+              'id': id is int ? id : int.tryParse(id.toString()) ?? 0,
+              'date': date,
+              'count': count is int ? count : int.tryParse(count.toString()) ?? 0,
+              'duration': duration,
+            });
+          }
+        }
+      } else {
+        // If no persisted sessions, populate sample history (optional)
+        _sessionHistory.addAll([
+          {
+            'id': 1,
+            'date': DateTime.now().subtract(const Duration(days: 1)),
+            'count': 1296,
+            'duration': '00:45:00',
+          },
+          {
+            'id': 2,
+            'date': DateTime.now().subtract(const Duration(days: 2)),
+            'count': 1080,
+            'duration': '00:40:00',
+          },
+          {
+            'id': 3,
+            'date': DateTime.now().subtract(const Duration(days: 3)),
+            'count': 864,
+            'duration': '00:32:00',
+          },
+          {
+            'id': 4,
+            'date': DateTime.now().subtract(const Duration(days: 4)),
+            'count': 1512,
+            'duration': '00:55:00',
+          },
+          {
+            'id': 5,
+            'date': DateTime.now().subtract(const Duration(days: 5)),
+            'count': 1080,
+            'duration': '00:42:00',
+          },
+        ]);
+      }
+
+      // Compute today's count by summing sessions whose date is today (local)
+      final now = DateTime.now();
+      final todayTotal = _sessionHistory.fold<int>(0, (acc, s) {
+        final DateTime dt = s['date'] is DateTime ? s['date'] as DateTime : DateTime.tryParse(s['date'].toString()) ?? DateTime.now();
+        if (_isSameLocalDay(dt, now)) {
+          return acc + (s['count'] is int ? s['count'] as int : int.tryParse(s['count'].toString()) ?? 0);
+        }
+        return acc;
+      });
+
+      setState(() {
+        _todayCount = todayTotal;
+        _isLoading = false;
+      });
+    } catch (e) {
+      // On error, fall back to empty state
+      debugPrint('Failed to load sessions from prefs: $e');
+      setState(() {
+        _todayCount = 0;
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Persist current session history to SharedPreferences
+  Future<void> _saveToPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Convert session history to JSON-serializable list
+      final List<Map<String, dynamic>> serializable = _sessionHistory.map((s) {
+        final DateTime date = s['date'] is DateTime ? s['date'] as DateTime : DateTime.tryParse(s['date'].toString()) ?? DateTime.now();
+        return {
+          'id': s['id'] ?? 0,
+          'date': date.toIso8601String(),
+          'count': s['count'] ?? 0,
+          'duration': s['duration']?.toString() ?? '',
+        };
+      }).toList();
+
+      final encoded = jsonEncode(serializable);
+      await prefs.setString(_prefsSessionHistoryKey, encoded);
+    } catch (e) {
+      debugPrint('Failed to save sessions to prefs: $e');
+    }
   }
 
   Future<void> _refreshData() async {
@@ -101,13 +189,71 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _startJapaSession() {
-    Navigator.pushNamed(context, '/counting-screen');
+  /// Start a japa session and await the result (session data) when saved.
+  Future<void> _startJapaSession() async {
+    final result = await Navigator.pushNamed(context, '/counting-screen');
+
+    if (result != null && result is Map<String, dynamic>) {
+      await _handleReturnedSession(result);
+    }
   }
 
-  void _startKidsMode() {
-    Navigator.pushNamed(context, '/counting-screen',
-        arguments: {'kidsMode': true});
+  /// Start kids mode and await result
+  Future<void> _startKidsMode() async {
+    final result = await Navigator.pushNamed(
+      context,
+      '/counting-screen',
+      arguments: {'kidsMode': true},
+    );
+
+    if (result != null && result is Map<String, dynamic>) {
+      await _handleReturnedSession(result);
+    }
+  }
+
+  /// Centralized handler for session data returned from CountingScreen
+  Future<void> _handleReturnedSession(Map<String, dynamic> session) async {
+    // Expecting keys: 'totalCount', 'malas', 'remainingJapas', 'duration', 'timestamp'
+    final dynamic totalCountRaw = session['totalCount'];
+    final int totalCount = (totalCountRaw is int)
+        ? totalCountRaw
+        : int.tryParse(totalCountRaw?.toString() ?? '') ?? 0;
+
+    final String timestampStr = session['timestamp']?.toString() ?? '';
+    final DateTime date = DateTime.tryParse(timestampStr) ?? DateTime.now();
+    final String duration = session['duration']?.toString() ?? '';
+
+    // Update UI and persisted state
+    setState(() {
+      // Add the returned count to today's count.
+      // If you prefer to replace instead of add, change this to `_todayCount = totalCount;`
+      _todayCount = _todayCount + totalCount;
+
+      // Insert new session at the top of history
+      final nextId = (_sessionHistory.isEmpty ? 1 : ((_sessionHistory.first['id'] as int?) ?? 0) + 1);
+      _sessionHistory.insert(
+        0,
+        {
+          'id': nextId,
+          'date': date,
+          'count': totalCount,
+          'duration': duration,
+        },
+      );
+    });
+
+    // Persist the updated session history
+    await _saveToPrefs();
+
+    // Optionally open the Japa summary screen to show the session details.
+    // We do it here so Home updates first, then shows the summary.
+    if (mounted) {
+      Navigator.pushNamed(
+        context,
+        '/japa-summary-screen',
+        arguments: session,
+      );
+    }
   }
 
   void _viewSessionDetails(Map<String, dynamic> session) {
@@ -219,5 +365,10 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
     );
+  }
+
+  /// Helper: check whether two DateTimes are on same local calendar day.
+  bool _isSameLocalDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 }

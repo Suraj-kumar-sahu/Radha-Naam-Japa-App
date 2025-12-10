@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "306534060670",
+    "project_id": "radha-naam-japa",
+    "storage_bucket": "radha-naam-japa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:306534060670:android:a7428355e2cd85cb08fe2f",
+        "android_client_info": {
+          "package_name": "com.example.radha_naam_japa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "306534060670-jmlp7j0nj495fd436kb2fvdvakbdgdus.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.radha_naam_japa",
+            "certificate_hash": "bbf1c253dd6009c13f734b2bb0134a7461e2edac"
+          }
+        },
+        {
+          "client_id": "306534060670-39kiko3rcf8hogq3rfbbne6g666p7ejq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBy7qlJXg_eYz9LxZVz19mFlBVPFUwJb80"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "306534060670-39kiko3rcf8hogq3rfbbne6g666p7ejq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "306534060670-juobnosuf1h840s82bfhj3pbo9sa9484.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.radhaNaamJapa"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

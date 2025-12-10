@@ -1,8 +1,12 @@
+// android/app/build.gradle.kts
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // Apply Google services plugin (REQUIRED for google-services.json)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -20,11 +24,8 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.radha_naam_japa"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = flutter.minSdkVersion               // REQUIRED for Firebase Auth
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -32,13 +33,27 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("debug") // For now
         }
     }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // --- Firebase BoM (manages compatible versions automatically)
+    // implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
+
+    // --- Firebase SDKs you want (NO versions needed when using BoM)
+    implementation("com.google.firebase:firebase-analytics-ktx:22.1.2")
+    implementation("com.google.firebase:firebase-auth-ktx:23.1.0")
+    implementation("com.google.firebase:firebase-analytics:22.1.2")
+
+    // (Optional) If you later use Firestore, add:
+    // implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // (Optional) If you later use Messaging:
+    // implementation("com.google.firebase:firebase-messaging-ktx")
 }
