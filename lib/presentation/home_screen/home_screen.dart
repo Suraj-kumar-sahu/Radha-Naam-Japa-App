@@ -347,20 +347,10 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: 0,
         onTap: (index) {
           if (index != 0) {
-            // Navigate to other tabs when implemented
-            // For now, show coming soon message
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  index == 1
-                      ? 'Statistics coming soon'
-                      : index == 2
-                          ? 'Leaderboard coming soon'
-                          : 'Settings coming soon',
-                ),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            final routes = ['/home-screen', '/home-screen', '/home-screen', '/settings-screen'];
+            if (index >= 0 && index < routes.length) {
+              Navigator.pushReplacementNamed(context, routes[index]);
+            }
           }
         },
       ),

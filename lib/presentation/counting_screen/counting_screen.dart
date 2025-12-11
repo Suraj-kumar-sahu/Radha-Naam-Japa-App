@@ -11,6 +11,7 @@ import '../../widgets/custom_icon_widget.dart';
 import './widgets/animated_radha_text_widget.dart';
 import './widgets/circular_progress_widget.dart';
 import './widgets/save_japa_button_widget.dart';
+import '../../services/japa_storage_service.dart';
 
 /// Counting Screen - Immersive full-screen japa counting experience
 /// Provides tap-anywhere functionality with real-time audio and visual feedback
@@ -185,21 +186,27 @@ class _CountingScreenState extends State<CountingScreen>
   }
 
   /// Save session and return to caller with session data
-  void _saveSession() {
-    final malas = _currentCount ~/ 108;
-    final remainingJapas = _currentCount % 108;
+Future<void> _saveSession() async {
+  final malas = _currentCount ~/ 108;
+  final remainingJapas = _currentCount % 108;
 
-    final sessionData = {
-      'totalCount': _currentCount,
-      'malas': malas,
-      'remainingJapas': remainingJapas,
-      'duration': _sessionDuration,
-      'timestamp': DateTime.now().toIso8601String(),
-    };
+  // Save to persistent storage
+  await JapaStorageService.saveJapaSession(_currentCount);
 
-    // Return the session data to whoever pushed CountingScreen
+  final sessionData = {
+    'totalCount': _currentCount,
+    'malas': malas,
+    'remainingJapas': remainingJapas,
+    'duration': _sessionDuration,
+    'timestamp': DateTime.now().toIso8601String(),
+  };
+
+  // Return the session data to whoever pushed CountingScreen
+  if (mounted) {
     Navigator.pop(context, sessionData);
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

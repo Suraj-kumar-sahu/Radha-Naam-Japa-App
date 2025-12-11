@@ -62,8 +62,8 @@ class CustomBottomBar extends StatelessWidget {
   /// Navigation items mapped to app routes
   static const List<BottomNavItem> _navItems = [
     BottomNavItem(
-      icon: Icons.help_outline,
-      activeIcon: Icons.help_outline,
+      icon: Icons.home_outlined,
+      activeIcon: Icons.home,
       label: 'Home',
       route: '/home-screen',
     ),
@@ -83,7 +83,7 @@ class CustomBottomBar extends StatelessWidget {
       icon: Icons.settings_outlined,
       activeIcon: Icons.settings,
       label: 'Settings',
-      route: '/home-screen', // Settings will be accessible from home
+      route: '/settings-screen',
     ),
   ];
 

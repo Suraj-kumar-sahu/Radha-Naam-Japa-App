@@ -5,6 +5,10 @@ import '../presentation/login_screen/login_screen.dart';
 import '../presentation/home_screen/home_screen.dart';
 import '../presentation/counting_screen/counting_screen.dart';
 import '../presentation/save_confirmation_modal/save_confirmation_modal.dart';
+import '../presentation/settings_screen/settings_screen.dart';
+import '../presentation/profile_screen/profile_screen.dart';
+import '../presentation/app_settings_screen/app_settings_screen.dart';
+import '../presentation/notification_screen/notification_screen.dart';
 
 class AppRoutes {
   // TODO: Add your routes here
@@ -15,6 +19,10 @@ class AppRoutes {
   static const String home = '/home-screen';
   static const String counting = '/counting-screen';
   static const String saveConfirmationModal = '/save-confirmation-modal';
+  static const String settings = '/settings-screen';
+  static const String profile = '/profile-screen';
+  static const String appSettings = '/app-settings-screen';
+  static const String notification = '/notification-screen';
 
   static Map<String, WidgetBuilder> routes = {
     initial: (context) => const SplashScreen(),
@@ -28,5 +36,9 @@ class AppRoutes {
       onConfirm: () {},
     ),
     // TODO: Add your other routes here
+    settings: (context) => const SettingsScreen(),
+        profile: (context) => const ProfileScreen(),
+        appSettings: (context) => const AppSettingsScreen(),
+        notification: (context) => const NotificationScreen(),
   };
 }
