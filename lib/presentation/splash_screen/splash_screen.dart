@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../core/app_export.dart';
 
@@ -80,7 +81,9 @@ class _SplashScreenState extends State<SplashScreen>
   /// Check if user is authenticated
   Future<void> _checkAuthenticationStatus() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    // TODO: Implement actual Google Sign-in check
+    // Check if user is already signed in with Firebase Auth
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    // The authentication status will be checked in _navigateToNextScreen
   }
 
   /// Load user preferences from storage
@@ -106,8 +109,9 @@ class _SplashScreenState extends State<SplashScreen>
     Future.delayed(const Duration(milliseconds: 300), () {
       if (!mounted) return;
 
-      // TODO: Check actual authentication status
-      final bool isAuthenticated = false; // Replace with actual check
+      // Check if user is already signed in with Firebase Auth
+      final User? currentUser = FirebaseAuth.instance.currentUser;
+      final bool isAuthenticated = currentUser != null;
 
       if (isAuthenticated) {
         Navigator.pushReplacementNamed(context, '/home-screen');
@@ -147,8 +151,8 @@ class _SplashScreenState extends State<SplashScreen>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppTheme.primaryOrange,
-                AppTheme.secondaryOrange,
+                AppTheme.goldRadiance,
+                AppTheme.glowGold,
               ],
             ),
           ),
@@ -184,7 +188,7 @@ class _SplashScreenState extends State<SplashScreen>
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: AppTheme.cardWhite,
+                color: AppTheme.moonlightWhite,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
@@ -198,7 +202,7 @@ class _SplashScreenState extends State<SplashScreen>
                 child: CustomIconWidget(
                   iconName: 'self_improvement',
                   size: 64,
-                  color: AppTheme.primaryOrange,
+                  color: AppTheme.goldRadiance,
                 ),
               ),
             ),
@@ -218,7 +222,7 @@ class _SplashScreenState extends State<SplashScreen>
           child: Text(
             'Divine Counter',
             style: theme.textTheme.titleLarge?.copyWith(
-              color: AppTheme.cardWhite,
+              color: AppTheme.moonlightWhite,
               fontWeight: FontWeight.w600,
               letterSpacing: 1.2,
             ),
@@ -236,15 +240,15 @@ class _SplashScreenState extends State<SplashScreen>
           Text(
             'Unable to connect',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppTheme.cardWhite.withValues(alpha: 0.9),
+              color: AppTheme.moonlightWhite.withValues(alpha: 0.9),
             ),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _retryInitialization,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.cardWhite,
-              foregroundColor: AppTheme.primaryOrange,
+              backgroundColor: AppTheme.moonlightWhite,
+              foregroundColor: AppTheme.goldRadiance,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
@@ -253,7 +257,7 @@ class _SplashScreenState extends State<SplashScreen>
             child: Text(
               'Retry',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: AppTheme.primaryOrange,
+                color: AppTheme.goldRadiance,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -268,7 +272,7 @@ class _SplashScreenState extends State<SplashScreen>
       child: CircularProgressIndicator(
         strokeWidth: 3,
         valueColor: AlwaysStoppedAnimation<Color>(
-          AppTheme.cardWhite.withValues(alpha: 0.9),
+          AppTheme.moonlightWhite.withValues(alpha: 0.9),
         ),
       ),
     );

@@ -1,50 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:sizer/sizer.dart';
+import '../../../theme/app_theme.dart';
 
-
-/// Greeting header widget displaying user name and current date
 class GreetingHeaderWidget extends StatelessWidget {
-  final String userName;
-
-  const GreetingHeaderWidget({
-    super.key,
-    required this.userName,
-  });
-
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
-  }
+  const GreetingHeaderWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final currentDate = DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now());
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${_getGreeting()}, $userName',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Soft Mandala Watermark (Simulated with Icon)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Radhe Radhe 🙏',
+                  style: AppTheme.glowTextStyle.copyWith(fontSize: 24.sp),
+                ),
+                SizedBox(height: 0.5.h),
+                Text(
+                  'Today is auspicious for chanting & clarity',
+                  style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.ashGray,
+                    fontSize: 11.sp,
+                  ),
+                ),
+              ],
             ),
-          ),
-          SizedBox(height: 0.5.h),
-          Text(
-            currentDate,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+            // Profile Icon / Mandala
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppTheme.dustGold.withOpacity(0.3)),
+              ),
+              child: const Icon(Icons.spa_outlined, color: AppTheme.goldRadiance),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -9,9 +9,11 @@ import '../presentation/settings_screen/settings_screen.dart';
 import '../presentation/profile_screen/profile_screen.dart';
 import '../presentation/app_settings_screen/app_settings_screen.dart';
 import '../presentation/notification_screen/notification_screen.dart';
+import '../presentation/statistics_screen/statistics_screen.dart';
+import '../presentation/leaderboard_screen/leaderboard_screen.dart';
+import '../presentation/my_ranking_modal/my_ranking_modal.dart';
 
 class AppRoutes {
-  // TODO: Add your routes here
   static const String initial = '/';
   static const String splash = '/splash-screen';
   static const String japaSummary = '/japa-summary-screen';
@@ -23,6 +25,9 @@ class AppRoutes {
   static const String profile = '/profile-screen';
   static const String appSettings = '/app-settings-screen';
   static const String notification = '/notification-screen';
+  static const String statistics = '/statistics-screen';
+  static const String leaderboard = '/leaderboard-screen';
+  static const String myRankingModal = '/my-ranking-modal';
 
   static Map<String, WidgetBuilder> routes = {
     initial: (context) => const SplashScreen(),
@@ -35,10 +40,12 @@ class AppRoutes {
       sessionCount: 0,
       onConfirm: () {},
     ),
-    // TODO: Add your other routes here
+    statistics: (context) => const StatisticsScreen(),
+    leaderboard: (context) => const LeaderboardScreen(),
+    myRankingModal: (context) => const MyRankingModal(),
     settings: (context) => const SettingsScreen(),
-        profile: (context) => const ProfileScreen(),
-        appSettings: (context) => const AppSettingsScreen(),
-        notification: (context) => const NotificationScreen(),
+    profile: (context) => const ProfileScreen(),
+    appSettings: (context) => const AppSettingsScreen(),
+    notification: (context) => const NotificationScreen(),
   };
 }

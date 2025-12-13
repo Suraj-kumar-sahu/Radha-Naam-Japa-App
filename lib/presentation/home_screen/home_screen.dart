@@ -5,15 +5,18 @@ import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/app_export.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_bottom_bar.dart';
-import '../../widgets/custom_icon_widget.dart';
-import './widgets/action_buttons_widget.dart';
-import './widgets/greeting_header_widget.dart';
-import './widgets/japa_progress_card_widget.dart';
-import './widgets/session_history_widget.dart';
+import '../../services/japa_storage_service.dart';
+import 'widgets/greeting_header_widget.dart';
+import 'widgets/japa_progress_card_widget.dart';
+import 'widgets/action_buttons_widget.dart';
+import 'widgets/spiritual_progress_row.dart';
+import 'widgets/daily_insight_cart.dart';
+import 'widgets/community_section_widget.dart';
+import 'widgets/pro_hook_card.dart';
 
-/// Home Screen - Central dashboard for daily japa practice
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -22,13 +25,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Preference key
+  // Preference keys
   static const String _prefsSessionHistoryKey = 'japa_session_history';
+  static const String _prefsDailyGoalKey = 'daily_goal';
 
   // Mock user data
   final String _userName = 'Devotee';
   int _todayCount = 0;
-  final int _dailyGoal = 1080; // 10 malas
+  int _dailyGoal = 1080; // 10 malas
+  int _totalChants = 0;
+  int _currentStreak = 0;
+  String _currentLevel = 'Bhakta';
   bool _isLoading = false;
   bool _isOffline = false;
 
@@ -48,6 +55,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
+
+      // Load daily goal
+      _dailyGoal = prefs.getInt(_prefsDailyGoalKey) ?? 1080;
+
       final sessionsJson = prefs.getString(_prefsSessionHistoryKey);
       _sessionHistory.clear();
 
@@ -129,8 +140,20 @@ class _HomeScreenState extends State<HomeScreen> {
         return acc;
       });
 
+      // Load total chants from JapaStorageService
+      final totalChants = await JapaStorageService.getTotalJaps();
+
+      // Compute current streak
+      final currentStreak = _calculateCurrentStreak();
+
+      // Determine current level based on total chants
+      final currentLevel = _getLevelFromTotalChants(totalChants);
+
       setState(() {
         _todayCount = todayTotal;
+        _totalChants = totalChants;
+        _currentStreak = currentStreak;
+        _currentLevel = currentLevel;
         _isLoading = false;
       });
     } catch (e) {
@@ -189,26 +212,22 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Start a japa session and await the result (session data) when saved.
+  /// Start a japa session and refresh data when returning
   Future<void> _startJapaSession() async {
-    final result = await Navigator.pushNamed(context, '/counting-screen');
-
-    if (result != null && result is Map<String, dynamic>) {
-      await _handleReturnedSession(result);
-    }
+    await Navigator.pushNamed(context, AppRoutes.counting);
+    // Refresh data when returning from counting screen
+    await _loadFromPrefs();
   }
 
-  /// Start kids mode and await result
+  /// Start kids mode and refresh data when returning
   Future<void> _startKidsMode() async {
-    final result = await Navigator.pushNamed(
+    await Navigator.pushNamed(
       context,
-      '/counting-screen',
+      AppRoutes.counting,
       arguments: {'kidsMode': true},
     );
-
-    if (result != null && result is Map<String, dynamic>) {
-      await _handleReturnedSession(result);
-    }
+    // Refresh data when returning from counting screen
+    await _loadFromPrefs();
   }
 
   /// Centralized handler for session data returned from CountingScreen
@@ -242,115 +261,130 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     });
 
+    // Recalculate totals after adding new session
+    final updatedTotalChants = _sessionHistory.fold<int>(0, (acc, s) {
+      return acc + (s['count'] is int ? s['count'] as int : int.tryParse(s['count'].toString()) ?? 0);
+    });
+    final updatedCurrentStreak = _calculateCurrentStreak();
+    final updatedCurrentLevel = _getLevelFromTotalChants(updatedTotalChants);
+
+    setState(() {
+      _totalChants = updatedTotalChants;
+      _currentStreak = updatedCurrentStreak;
+      _currentLevel = updatedCurrentLevel;
+    });
+
     // Persist the updated session history
     await _saveToPrefs();
-
-    // Optionally open the Japa summary screen to show the session details.
-    // We do it here so Home updates first, then shows the summary.
-    if (mounted) {
-      Navigator.pushNamed(
-        context,
-        '/japa-summary-screen',
-        arguments: session,
-      );
-    }
   }
 
   void _viewSessionDetails(Map<String, dynamic> session) {
     Navigator.pushNamed(
       context,
-      '/japa-summary-screen',
+      AppRoutes.japaSummary,
       arguments: session,
     );
   }
 
+  /// Handle target change from the progress card
+  Future<void> _onTargetChanged(int newTarget) async {
+    setState(() {
+      _dailyGoal = newTarget;
+    });
+
+    // Save the new target to SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_prefsDailyGoalKey, newTarget);
+    } catch (e) {
+      debugPrint('Failed to save daily goal: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: CustomAppBar.standard(
-        title: 'Radha Naam Japa',
-        actions: [
-          if (_isOffline)
-            Padding(
-              padding: EdgeInsets.only(right: 2.w),
-              child: CustomIconWidget(
-                iconName: 'cloud_off',
-                color: theme.colorScheme.error,
-                size: 20,
-              ),
-            ),
-          IconButton(
-            icon: CustomIconWidget(
-              iconName: 'notifications_outlined',
-              color: theme.colorScheme.onSurface,
-              size: 24,
-            ),
-            onPressed: () {
-              // Navigate to notifications
-            },
-            tooltip: 'Notifications',
-          ),
-        ],
+      extendBody: true,
+      appBar: CustomAppBar(
+        variant: AppBarVariant.transparent,
+        height: 0,
       ),
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        color: theme.colorScheme.primary,
-        child: _isLoading
-            ? Center(
-                child: CircularProgressIndicator(
-                  color: theme.colorScheme.primary,
-                ),
-              )
-            : SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: SafeArea(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        // 🌟 COSMIC BACKGROUND
+        decoration: const BoxDecoration(
+          gradient: AppTheme.cosmicNebulaGradient,
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: _isLoading
+              ? Center(
+                  child: CircularProgressIndicator(
+                    color: AppTheme.goldRadiance,
+                  ),
+                )
+              : SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Greeting Header
-                      GreetingHeaderWidget(userName: _userName),
+                      SizedBox(height: 1.h),
 
+                      // 1. SACRED HEADER
+                      const GreetingHeaderWidget(),
                       SizedBox(height: 2.h),
 
-                      // Japa Progress Card
-                      JapaProgressCardWidget(
-                        todayCount: _todayCount,
-                        dailyGoal: _dailyGoal,
+                      // 2. TODAY'S NAAM JAPA CARD
+                      Center(
+                        child: JapaProgressCardWidget(
+                          todayCount: _todayCount,
+                          dailyGoal: _dailyGoal,
+                          onTargetChanged: _onTargetChanged,
+                        ),
                       ),
-
                       SizedBox(height: 3.h),
 
-                      // Action Buttons
+                      // 3. PRIMARY CTA & 4. GAME MODE
                       ActionButtonsWidget(
                         onStartJapa: _startJapaSession,
                         onKidsMode: _startKidsMode,
                       ),
+                      SizedBox(height: 3.h),
 
-                      SizedBox(height: 4.h),
-
-                      // Session History
-                      SessionHistoryWidget(
-                        sessions: _sessionHistory,
-                        onSessionTap: _viewSessionDetails,
+                      // 5. SPIRITUAL PROGRESS ROW
+                      SpiritualProgressRow(
+                        currentStreak: _currentStreak,
+                        totalChants: _totalChants,
+                        currentLevel: _currentLevel,
                       ),
+                      SizedBox(height: 3.h),
 
-                      SizedBox(height: 10.h),
+                      // 6. DAILY AI INSIGHT CARD
+                      const DailyInsightCard(),
+                      SizedBox(height: 3.h),
+
+                      // 7. GROUPS & 8. LEADERBOARD PREVIEW
+                      const CommunitySectionWidget(),
+                      SizedBox(height: 3.h),
+
+                      // 9. SUBSCRIPTION / PRO HOOK
+                      const ProHookCard(),
+
+                      // Bottom padding for navigation bar
+                      SizedBox(height: 12.h),
                     ],
                   ),
                 ),
-              ),
+        ),
       ),
       bottomNavigationBar: CustomBottomBar(
         currentIndex: 0,
         onTap: (index) {
           if (index != 0) {
-            final routes = ['/home-screen', '/home-screen', '/home-screen', '/settings-screen'];
-            if (index >= 0 && index < routes.length) {
-              Navigator.pushReplacementNamed(context, routes[index]);
-            }
+            final route = CustomBottomBar.getRouteForIndex(index);
+            Navigator.pushReplacementNamed(context, route);
           }
         },
       ),
@@ -360,5 +394,68 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Helper: check whether two DateTimes are on same local calendar day.
   bool _isSameLocalDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  /// Calculate the current streak of consecutive days with japa sessions
+  int _calculateCurrentStreak() {
+    if (_sessionHistory.isEmpty) return 0;
+
+    // Sort sessions by date (most recent first)
+    final sortedSessions = List<Map<String, dynamic>>.from(_sessionHistory)
+      ..sort((a, b) {
+        final dateA = a['date'] is DateTime ? a['date'] as DateTime : DateTime.tryParse(a['date'].toString()) ?? DateTime.now();
+        final dateB = b['date'] is DateTime ? b['date'] as DateTime : DateTime.tryParse(b['date'].toString()) ?? DateTime.now();
+        return dateB.compareTo(dateA);
+      });
+
+    // Get unique dates with sessions
+    final sessionDates = <DateTime>{};
+    for (final session in sortedSessions) {
+      final date = session['date'] is DateTime ? session['date'] as DateTime : DateTime.tryParse(session['date'].toString()) ?? DateTime.now();
+      sessionDates.add(DateTime(date.year, date.month, date.day));
+    }
+
+    final uniqueDates = sessionDates.toList()..sort((a, b) => b.compareTo(a));
+
+    if (uniqueDates.isEmpty) return 0;
+
+    int streak = 0;
+    DateTime currentDate = DateTime.now();
+    currentDate = DateTime(currentDate.year, currentDate.month, currentDate.day);
+
+    // Check if today has a session
+    if (!uniqueDates.contains(currentDate)) {
+      // If no session today, check yesterday
+      currentDate = currentDate.subtract(const Duration(days: 1));
+      if (!uniqueDates.contains(currentDate)) {
+        return 0; // No recent session
+      }
+    }
+
+    // Count consecutive days
+    for (int i = 0; i < uniqueDates.length; i++) {
+      final expectedDate = currentDate.subtract(Duration(days: i));
+      if (uniqueDates.contains(expectedDate)) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  /// Get the spiritual level based on total chants
+  String _getLevelFromTotalChants(int totalChants) {
+    if (totalChants >= 1000000) return 'Mahabhakta'; // 1M+
+    if (totalChants >= 500000) return 'Paramabhakta'; // 500k+
+    if (totalChants >= 250000) return 'Uttamabhakta'; // 250k+
+    if (totalChants >= 100000) return 'Madhyamabhakta'; // 100k+
+    if (totalChants >= 50000) return 'Kanisthabhakta'; // 50k+
+    if (totalChants >= 25000) return 'Neophyte'; // 25k+
+    if (totalChants >= 10000) return 'Initiate'; // 10k+
+    if (totalChants >= 5000) return 'Seeker'; // 5k+
+    if (totalChants >= 1000) return 'Bhakta'; // 1k+
+    return 'Beginner'; // < 1k
   }
 }

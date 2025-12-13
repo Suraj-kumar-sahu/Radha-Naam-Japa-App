@@ -147,8 +147,9 @@ class _CountingScreenState extends State<CountingScreen>
       builder: (context) => _buildSaveConfirmationDialog(),
     );
 
+    debugPrint('Save confirmation result: $shouldSave');
     if (shouldSave == true && mounted) {
-      _saveSession();
+      await _saveSession();
     }
   }
 
@@ -185,25 +186,68 @@ class _CountingScreenState extends State<CountingScreen>
     );
   }
 
-  /// Save session and return to caller with session data
+  /// Save session and navigate to japa summary screen
 Future<void> _saveSession() async {
-  final malas = _currentCount ~/ 108;
-  final remainingJapas = _currentCount % 108;
+  debugPrint('_saveSession called with count: $_currentCount');
+  try {
+    final malas = _currentCount ~/ 108;
+    final remainingJapas = _currentCount % 108;
 
-  // Save to persistent storage
-  await JapaStorageService.saveJapaSession(_currentCount);
+    // Save to persistent storage
+    await JapaStorageService.saveJapaSession(_currentCount);
 
-  final sessionData = {
-    'totalCount': _currentCount,
-    'malas': malas,
-    'remainingJapas': remainingJapas,
-    'duration': _sessionDuration,
-    'timestamp': DateTime.now().toIso8601String(),
-  };
+    final sessionData = {
+      'totalCount': _currentCount,
+      'malas': malas,
+      'remainingJapas': remainingJapas,
+      'duration': _sessionDuration,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
 
-  // Return the session data to whoever pushed CountingScreen
-  if (mounted) {
-    Navigator.pop(context, sessionData);
+    debugPrint('Navigating to japa summary with data: $sessionData');
+    // Navigate to japa summary screen with session data
+    if (mounted) {
+      debugPrint('Widget is mounted, attempting navigation');
+      try {
+        await Navigator.pushNamed(context, AppRoutes.japaSummary, arguments: sessionData);
+        debugPrint('Navigation call completed successfully');
+      } catch (navError) {
+        debugPrint('Navigation failed: $navError');
+        // Try alternative navigation method
+        if (mounted) {
+          Navigator.of(context).pushNamed(AppRoutes.japaSummary, arguments: sessionData);
+        }
+      }
+    } else {
+      debugPrint('Widget not mounted, cannot navigate');
+    }
+  } catch (e) {
+    debugPrint('Error in _saveSession: $e');
+    // Still try to navigate even if save fails
+    if (mounted) {
+      debugPrint('Widget is mounted in catch block, attempting navigation');
+      final malas = _currentCount ~/ 108;
+      final remainingJapas = _currentCount % 108;
+      final sessionData = {
+        'totalCount': _currentCount,
+        'malas': malas,
+        'remainingJapas': remainingJapas,
+        'duration': _sessionDuration,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+      try {
+        await Navigator.pushNamed(context, AppRoutes.japaSummary, arguments: sessionData);
+        debugPrint('Navigation call completed in catch block successfully');
+      } catch (navError) {
+        debugPrint('Navigation failed in catch block: $navError');
+        // Try alternative navigation method
+        if (mounted) {
+          Navigator.of(context).pushNamed(AppRoutes.japaSummary, arguments: sessionData);
+        }
+      }
+    } else {
+      debugPrint('Widget not mounted in catch block');
+    }
   }
 }
 

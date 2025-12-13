@@ -71,13 +71,13 @@ class CustomBottomBar extends StatelessWidget {
       icon: Icons.bar_chart_outlined,
       activeIcon: Icons.bar_chart,
       label: 'Statistics',
-      route: '/home-screen', // Statistics will be a tab/section in home
+      route: '/statistics-screen',
     ),
     BottomNavItem(
       icon: Icons.emoji_events_outlined,
       activeIcon: Icons.emoji_events,
       label: 'Leaderboard',
-      route: '/home-screen', // Leaderboard will be a tab/section in home
+      route: '/leaderboard-screen',
     ),
     BottomNavItem(
       icon: Icons.settings_outlined,

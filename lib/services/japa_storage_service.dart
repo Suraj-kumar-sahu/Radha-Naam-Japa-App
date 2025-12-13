@@ -1,4 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'firestore_service.dart';
 
 /// Service for managing Japa counting data persistence
 class JapaStorageService {
@@ -20,7 +22,11 @@ class JapaStorageService {
   }
 
   /// Save japa session data
-  static Future<void> saveJapaSession(int sessionJaps) async {
+  static Future<void> saveJapaSession(
+    int sessionJaps, {
+    String duration = '00:00:00',
+    DateTime? timestamp,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
 
     // Get current totals
@@ -34,6 +40,21 @@ class JapaStorageService {
     // Save updated totals
     await prefs.setInt(_totalJapsKey, newTotal);
     await prefs.setInt(_malasCompletedKey, newMalas);
+
+    // Save to Firestore if user is authenticated
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await FirestoreService.saveJapaSession(
+          count: sessionJaps,
+          duration: duration,
+          timestamp: timestamp ?? DateTime.now(),
+        );
+      } catch (e) {
+        // Silently fail if Firestore save fails - local data is still saved
+        print('Failed to save session to Firestore: $e');
+      }
+    }
   }
 
   /// Get leaderboard visibility preference

@@ -282,7 +282,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _navigateToTab(int index) {
-    final routes = ['/home-screen', '/home-screen', '/home-screen', '/settings-screen'];
+    final routes = ['/home-screen', '/statistics-screen', '/leaderboard-screen', '/settings-screen'];
     if (index >= 0 && index < routes.length) {
       Navigator.pushReplacementNamed(context, routes[index]);
     }
