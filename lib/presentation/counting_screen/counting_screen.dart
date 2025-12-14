@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,13 +7,13 @@ import 'package:sizer/sizer.dart';
 import '../../core/app_export.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_icon_widget.dart';
+import '../../theme/app_theme.dart'; // Import theme
+import '../save_confirmation_modal/save_confirmation_modal.dart'; // Import the Modal
 import './widgets/animated_radha_text_widget.dart';
 import './widgets/circular_progress_widget.dart';
 import './widgets/save_japa_button_widget.dart';
 import '../../services/japa_storage_service.dart';
 
-/// Counting Screen - Immersive full-screen japa counting experience
-/// Provides tap-anywhere functionality with real-time audio and visual feedback
 class CountingScreen extends StatefulWidget {
   const CountingScreen({super.key});
 
@@ -24,22 +23,17 @@ class CountingScreen extends StatefulWidget {
 
 class _CountingScreenState extends State<CountingScreen>
     with TickerProviderStateMixin {
-  // Core counting state
   int _currentCount = 0;
   int _sessionStartTime = 0;
   String _sessionDuration = "00:00:00";
   Timer? _sessionTimer;
 
-  // Audio state
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isMuted = false;
   bool _isAudioInitialized = false;
 
-  // Animation state for राधा text
   final List<AnimatedRadhaTextData> _radhaAnimations = [];
   int _animationIdCounter = 0;
-
-  // Controllers
   late AnimationController _pulseController;
 
   @override
@@ -58,21 +52,16 @@ class _CountingScreenState extends State<CountingScreen>
     super.dispose();
   }
 
-  /// Initialize audio player with Radha sound
   Future<void> _initializeAudio() async {
     try {
-      // Using a royalty-free spiritual chant sound
-      // In production, replace with actual "Radha" audio file
       await _audioPlayer.setSource(AssetSource('sounds/radha_chant.mp3'));
       await _audioPlayer.setReleaseMode(ReleaseMode.stop);
       setState(() => _isAudioInitialized = true);
     } catch (e) {
-      // Silent fail - audio is optional
       debugPrint('Audio initialization failed: $e');
     }
   }
 
-  /// Initialize pulse animation for Save button
   void _initializePulseAnimation() {
     _pulseController = AnimationController(
       vsync: this,
@@ -80,7 +69,6 @@ class _CountingScreenState extends State<CountingScreen>
     )..repeat(reverse: true);
   }
 
-  /// Start session timer
   void _startSessionTimer() {
     _sessionStartTime = DateTime.now().millisecondsSinceEpoch;
     _sessionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -88,43 +76,27 @@ class _CountingScreenState extends State<CountingScreen>
       final hours = (elapsed ~/ 3600000).toString().padLeft(2, '0');
       final minutes = ((elapsed % 3600000) ~/ 60000).toString().padLeft(2, '0');
       final seconds = ((elapsed % 60000) ~/ 1000).toString().padLeft(2, '0');
-      setState(() => _sessionDuration = "$hours:$minutes:$seconds");
+      if (mounted) setState(() => _sessionDuration = "$hours:$minutes:$seconds");
     });
   }
 
-  /// Handle tap anywhere on screen
   Future<void> _handleTap(TapDownDetails details) async {
-    // Increment count
     setState(() => _currentCount++);
-
-    // Play audio if not muted
     if (!_isMuted && _isAudioInitialized) {
       try {
         await _audioPlayer.stop();
         await _audioPlayer.resume();
-      } catch (e) {
-        debugPrint('Audio playback error: $e');
-      }
+      } catch (e) {}
     }
-
-    // Trigger haptic feedback
     HapticFeedback.lightImpact();
-
-    // Create animated राधा text at tap location
     _createRadhaAnimation(details.globalPosition);
   }
 
-  /// Create animated राधा text at tap position
   void _createRadhaAnimation(Offset position) {
     final animationId = _animationIdCounter++;
     setState(() {
-      _radhaAnimations.add(AnimatedRadhaTextData(
-        id: animationId,
-        position: position,
-      ));
+      _radhaAnimations.add(AnimatedRadhaTextData(id: animationId, position: position));
     });
-
-    // Remove animation after completion
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         setState(() {
@@ -134,66 +106,37 @@ class _CountingScreenState extends State<CountingScreen>
     });
   }
 
-  /// Toggle audio mute state
-  void _toggleMute() {
-    setState(() => _isMuted = !_isMuted);
-  }
-
-  /// Show save confirmation modal
+  /// 🌟 UPDATED: Use the SaveConfirmationModal Bottom Sheet
   Future<void> _showSaveConfirmation() async {
-    final shouldSave = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => _buildSaveConfirmationDialog(),
+    // Use the static .show method from your modal widget
+    final shouldSave = await SaveConfirmationModal.show(
+      context,
+      sessionCount: _currentCount,
+      onConfirm: () {
+        // The modal handles navigation pop, we handle logic here
+      },
     );
 
-    debugPrint('Save confirmation result: $shouldSave');
+    // If modal returns true (confirmed), save and exit
     if (shouldSave == true && mounted) {
-      await _saveSession();
+      _saveSession();
+    } else if (mounted) {
+      // Exit without saving, but show summary
+      final sessionData = {
+        'totalCount': _currentCount,
+        'malas': _currentCount ~/ 108,
+        'remainingJapas': _currentCount % 108,
+        'duration': _sessionDuration,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+      Navigator.pop(context, sessionData);
     }
   }
 
-  /// Build save confirmation dialog
-  Widget _buildSaveConfirmationDialog() {
-    final theme = Theme.of(context);
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text(
-        'End Japa Session?',
-        style: theme.textTheme.titleLarge,
-      ),
-      content: Text(
-        'Are you sure you want to end this session and save your progress?',
-        style: theme.textTheme.bodyMedium,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(
-            'Cancel',
-            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context, true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor: theme.colorScheme.onPrimary,
-          ),
-          child: const Text('Confirm'),
-        ),
-      ],
-    );
-  }
-
-  /// Save session and navigate to japa summary screen
-Future<void> _saveSession() async {
-  debugPrint('_saveSession called with count: $_currentCount');
-  try {
+  Future<void> _saveSession() async {
     final malas = _currentCount ~/ 108;
     final remainingJapas = _currentCount % 108;
 
-    // Save to persistent storage
     await JapaStorageService.saveJapaSession(_currentCount);
 
     final sessionData = {
@@ -204,77 +147,30 @@ Future<void> _saveSession() async {
       'timestamp': DateTime.now().toIso8601String(),
     };
 
-    debugPrint('Navigating to japa summary with data: $sessionData');
-    // Navigate to japa summary screen with session data
     if (mounted) {
-      debugPrint('Widget is mounted, attempting navigation');
-      try {
-        await Navigator.pushNamed(context, AppRoutes.japaSummary, arguments: sessionData);
-        debugPrint('Navigation call completed successfully');
-      } catch (navError) {
-        debugPrint('Navigation failed: $navError');
-        // Try alternative navigation method
-        if (mounted) {
-          Navigator.of(context).pushNamed(AppRoutes.japaSummary, arguments: sessionData);
-        }
-      }
-    } else {
-      debugPrint('Widget not mounted, cannot navigate');
-    }
-  } catch (e) {
-    debugPrint('Error in _saveSession: $e');
-    // Still try to navigate even if save fails
-    if (mounted) {
-      debugPrint('Widget is mounted in catch block, attempting navigation');
-      final malas = _currentCount ~/ 108;
-      final remainingJapas = _currentCount % 108;
-      final sessionData = {
-        'totalCount': _currentCount,
-        'malas': malas,
-        'remainingJapas': remainingJapas,
-        'duration': _sessionDuration,
-        'timestamp': DateTime.now().toIso8601String(),
-      };
-      try {
-        await Navigator.pushNamed(context, AppRoutes.japaSummary, arguments: sessionData);
-        debugPrint('Navigation call completed in catch block successfully');
-      } catch (navError) {
-        debugPrint('Navigation failed in catch block: $navError');
-        // Try alternative navigation method
-        if (mounted) {
-          Navigator.of(context).pushNamed(AppRoutes.japaSummary, arguments: sessionData);
-        }
-      }
-    } else {
-      debugPrint('Widget not mounted in catch block');
+      Navigator.pop(context, sessionData);
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    // Force dark theme colors for immersive experience
+    final theme = AppTheme.darkTheme; 
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: AppTheme.deepMysticBlack,
       appBar: CustomAppBar.minimal(
         leading: IconButton(
-          icon: CustomIconWidget(
-            iconName: 'arrow_back',
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            size: 24,
-          ),
+          icon: const Icon(Icons.arrow_back, color: AppTheme.ashGray),
           onPressed: () => _showSaveConfirmation(),
         ),
         actions: [
           IconButton(
-            icon: CustomIconWidget(
-              iconName: _isMuted ? 'volume_off' : 'volume_up',
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              size: 24,
+            icon: Icon(
+              _isMuted ? Icons.volume_off : Icons.volume_up,
+              color: AppTheme.ashGray,
             ),
-            onPressed: _toggleMute,
+            onPressed: () => setState(() => _isMuted = !_isMuted),
           ),
           SizedBox(width: 2.w),
         ],
@@ -284,35 +180,42 @@ Future<void> _saveSession() async {
         behavior: HitTestBehavior.opaque,
         child: Stack(
           children: [
-            // Main content
+            // Background Gradient (Subtle)
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.center,
+                    radius: 1.5,
+                    colors: [
+                      AppTheme.purpleMist.withOpacity(0.2),
+                      AppTheme.deepMysticBlack,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            
             SafeArea(
               child: Column(
                 children: [
-                  // Session info header
-                  _buildSessionHeader(theme),
-
-                  // Circular progress indicator
+                  _buildSessionHeader(),
                   Expanded(
                     child: Center(
                       child: CircularProgressWidget(
                         currentCount: _currentCount,
-                        onTap: () {}, // Handled by parent GestureDetector
+                        onTap: () {},
                       ),
                     ),
                   ),
-
-                  // Save button
                   SaveJapaButtonWidget(
                     pulseController: _pulseController,
                     onPressed: _showSaveConfirmation,
                   ),
-
                   SizedBox(height: 3.h),
                 ],
               ),
             ),
-
-            // Animated राधा texts
             ..._radhaAnimations.map((data) => AnimatedRadhaTextWidget(
                   key: ValueKey(data.id),
                   position: data.position,
@@ -323,38 +226,28 @@ Future<void> _saveSession() async {
     );
   }
 
-  /// Build session info header
-  Widget _buildSessionHeader(ThemeData theme) {
+  Widget _buildSessionHeader() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
       child: Column(
         children: [
-          // Session timer
           Text(
             _sessionDuration,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+            style: AppTheme.darkTheme.textTheme.headlineSmall?.copyWith(
+              color: AppTheme.ashGray,
               fontWeight: FontWeight.w600,
             ),
           ),
           SizedBox(height: 1.h),
-
-          // Current count display
           Text(
             _currentCount.toString(),
-            style: theme.textTheme.displayLarge?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w700,
-              fontSize: 48.sp,
-            ),
+            style: AppTheme.glowTextStyle.copyWith(fontSize: 48.sp),
           ),
           SizedBox(height: 0.5.h),
-
-          // Mala progress text
           Text(
             '${_currentCount ~/ 108} Malas + ${_currentCount % 108} Japas',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+            style: AppTheme.darkTheme.textTheme.bodyLarge?.copyWith(
+              color: AppTheme.goldRadiance,
             ),
           ),
         ],
@@ -363,13 +256,8 @@ Future<void> _saveSession() async {
   }
 }
 
-/// Data class for animated राधा text
 class AnimatedRadhaTextData {
   final int id;
   final Offset position;
-
-  AnimatedRadhaTextData({
-    required this.id,
-    required this.position,
-  });
+  AnimatedRadhaTextData({required this.id, required this.position});
 }

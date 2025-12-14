@@ -250,7 +250,7 @@ class SaveConfirmationModal extends StatelessWidget {
                       ),
                       SizedBox(width: 2.w),
                       Text(
-                        'Cancel',
+                        'Exit without saving',
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w600,
