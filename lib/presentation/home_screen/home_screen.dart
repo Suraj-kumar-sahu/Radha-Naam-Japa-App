@@ -6,6 +6,7 @@ import '../../core/app_export.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_bottom_bar.dart';
+import '../../services/japa_storage_service.dart';
 import 'widgets/greeting_header_widget.dart';
 import 'widgets/japa_progress_card_widget.dart';
 import 'widgets/action_buttons_widget.dart';
@@ -36,10 +37,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadTodayCount() async {
-    // Implement your storage loading logic here
-    // For now, we keep it simple or mock it
+    final todayCount = await JapaStorageService.getTodayCount();
     setState(() {
-      _todayCount = 36; // Mock data or load from prefs
+      _todayCount = todayCount;
     });
   }
 
@@ -98,21 +98,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(height: 1.h),
                 const GreetingHeaderWidget(),
                 SizedBox(height: 2.h),
-                
+
                 JapaProgressCardWidget(
                   todayCount: _todayCount,
                   dailyGoal: _dailyGoal,
                   onTargetChanged: _handleTargetChanged,
                 ),
-                
+
                 SizedBox(height: 3.h),
-                
+
                 // 🌟 FIX: Use the handler method here
                 ActionButtonsWidget(
-                  onStartJapa: _handleStartJapa, 
+                  onStartJapa: _handleStartJapa,
                   onKidsMode: () {},
                 ),
-                
+
                 SizedBox(height: 3.h),
                 SpiritualProgressRow(
                   currentStreak: _currentStreak,

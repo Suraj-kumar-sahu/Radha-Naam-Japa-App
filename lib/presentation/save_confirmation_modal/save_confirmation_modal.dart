@@ -93,7 +93,7 @@ class SaveConfirmationModal extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(2.w),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      color: colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12.0),
                     ),
                     child: CustomIconWidget(
@@ -123,10 +123,10 @@ class SaveConfirmationModal extends StatelessWidget {
                   vertical: 2.h,
                 ),
                 decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(alpha: 0.2),
+                  color: colorScheme.primaryContainer.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12.0),
                   border: Border.all(
-                    color: colorScheme.primary.withValues(alpha: 0.3),
+                    color: colorScheme.primary.withOpacity(0.3),
                     width: 1.0,
                   ),
                 ),
@@ -197,7 +197,7 @@ class SaveConfirmationModal extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerHighest
-                      .withValues(alpha: 0.3),
+                      .withOpacity(0.3),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Row(
@@ -222,14 +222,70 @@ class SaveConfirmationModal extends StatelessWidget {
               ),
               SizedBox(height: 3.h),
 
-              // Cancel button (secondary)
+              // Cancel button (secondary) - now first
+              Container(
+                width: double.infinity,
+                height: 6.h,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colorScheme.primary,
+                      colorScheme.secondary,
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 8.0,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                    onCancel?.call();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CustomIconWidget(
+                        iconName: 'check_circle',
+                        color: colorScheme.onPrimary,
+                        size: 20,
+                      ),
+                      SizedBox(width: 2.w),
+                      Text(
+                        'Confirm & Save',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: colorScheme.onPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 2.h),
+
+              // Confirm button (primary) - now second
               SizedBox(
                 width: double.infinity,
                 height: 6.h,
                 child: OutlinedButton(
                   onPressed: () {
-                    Navigator.of(context).pop(false);
-                    onCancel?.call();
+                    Navigator.of(context).pop(true);
+                    onConfirm();
                   },
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(
@@ -253,62 +309,6 @@ class SaveConfirmationModal extends StatelessWidget {
                         'Exit without saving',
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: 2.h),
-
-              // Confirm button (primary)
-              Container(
-                width: double.infinity,
-                height: 6.h,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      colorScheme.primary,
-                      colorScheme.secondary,
-                    ],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 8.0,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(true);
-                    onConfirm();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CustomIconWidget(
-                        iconName: 'check_circle',
-                        color: colorScheme.onPrimary,
-                        size: 20,
-                      ),
-                      SizedBox(width: 2.w),
-                      Text(
-                        'Confirm & Save',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: colorScheme.onPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

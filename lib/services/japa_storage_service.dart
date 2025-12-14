@@ -8,6 +8,8 @@ class JapaStorageService {
   static const String _malasCompletedKey = 'malas_completed';
   static const String _showProfileInLeaderboardKey =
       'show_profile_in_leaderboard';
+  static const String _todayCountKey = 'today_count';
+  static const String _todayDateKey = 'today_date';
 
   /// Get total japs count
   static Future<int> getTotalJaps() async {
@@ -21,6 +23,23 @@ class JapaStorageService {
     return prefs.getInt(_malasCompletedKey) ?? 0;
   }
 
+  /// Get today's count
+  static Future<int> getTodayCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final todayString = '${today.year}-${today.month}-${today.day}';
+    final storedDate = prefs.getString(_todayDateKey);
+
+    // Reset count if it's a new day
+    if (storedDate != todayString) {
+      await prefs.setInt(_todayCountKey, 0);
+      await prefs.setString(_todayDateKey, todayString);
+      return 0;
+    }
+
+    return prefs.getInt(_todayCountKey) ?? 0;
+  }
+
   /// Save japa session data
   static Future<void> saveJapaSession(
     int sessionJaps, {
@@ -32,14 +51,17 @@ class JapaStorageService {
     // Get current totals
     final currentTotal = prefs.getInt(_totalJapsKey) ?? 0;
     final currentMalas = prefs.getInt(_malasCompletedKey) ?? 0;
+    final currentToday = await getTodayCount();
 
     // Calculate new totals
     final newTotal = currentTotal + sessionJaps;
     final newMalas = newTotal ~/ 108;
+    final newToday = currentToday + sessionJaps;
 
     // Save updated totals
     await prefs.setInt(_totalJapsKey, newTotal);
     await prefs.setInt(_malasCompletedKey, newMalas);
+    await prefs.setInt(_todayCountKey, newToday);
 
     // Save to Firestore if user is authenticated
     final user = FirebaseAuth.instance.currentUser;
