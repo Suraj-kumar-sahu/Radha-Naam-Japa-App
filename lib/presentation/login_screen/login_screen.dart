@@ -298,7 +298,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _showSuccessFeedback();
           await Future.delayed(const Duration(milliseconds: 300));
           if (mounted) {
-            Navigator.pushReplacementNamed(context, '/home-screen');
+            Navigator.pushReplacementNamed(context, '/home');
           }
         }
       } else {

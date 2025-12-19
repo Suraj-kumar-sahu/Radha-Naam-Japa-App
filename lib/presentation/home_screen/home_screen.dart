@@ -74,6 +74,29 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  /// Handle kids mode navigation
+  Future<void> _handleKidsMode() async {
+    // Navigate to kids mode screen
+    final result = await Navigator.pushNamed(context, AppRoutes.kidsMode);
+
+    // Handle the result similar to counting screen
+    if (result != null && result is Map<String, dynamic>) {
+      if (result.containsKey('totalCount')) {
+        setState(() {
+          _todayCount += (result['totalCount'] as int);
+        });
+      }
+
+      if (mounted) {
+        Navigator.pushNamed(
+          context,
+          AppRoutes.japaSummary,
+          arguments: result,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,17 +130,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 SizedBox(height: 3.h),
 
-                // 🌟 FIX: Use the handler method here
-                ActionButtonsWidget(
-                  onStartJapa: _handleStartJapa,
-                  onKidsMode: () {},
-                ),
-
-                SizedBox(height: 3.h),
                 SpiritualProgressRow(
                   currentStreak: _currentStreak,
                   totalChants: _totalChants,
                   currentLevel: _currentLevel,
+                ),
+
+                SizedBox(height: 3.h),
+
+                // 🌟 FIX: Use the handler method here
+                ActionButtonsWidget(
+                  onStartJapa: _handleStartJapa,
+                  onKidsMode: _handleKidsMode,
                 ),
                 SizedBox(height: 3.h),
                 const DailyInsightCard(),
@@ -131,9 +155,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: CustomBottomBar(
+      bottomNavigationBar: CustomBottomBar.withNavigation(
+        context: context,
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
       ),
     );
   }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
-/// Animated राधा text that appears at tap location and fades out
-/// Creates engaging visual feedback for each japa count
+/// Animated राधा text that appears at bubble pop location and fades out
+/// Creates engaging visual feedback for each bubble pop in kids mode
 class AnimatedRadhaTextWidget extends StatefulWidget {
   final Offset position;
 
@@ -22,7 +22,6 @@ class _AnimatedRadhaTextWidgetState extends State<AnimatedRadhaTextWidget>
   late Animation<double> _opacityAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<Offset> _positionAnimation;
-  late Animation<double> _rotationAnimation;
 
   // Colorful gradient colors for राधा text
   final List<Color> _radhaColors = [
@@ -76,18 +75,11 @@ class _AnimatedRadhaTextWidgetState extends State<AnimatedRadhaTextWidget>
 
     _positionAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: const Offset(0, -200), // Increased upward movement
+      end: const Offset(0, -50),
     ).animate(
       CurvedAnimation(
         parent: _controller,
         curve: Curves.easeOut,
-      ),
-    );
-
-    _rotationAnimation = Tween<double>(begin: -0.3, end: 0.3).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.4, curve: Curves.easeInOut),
       ),
     );
 
@@ -103,8 +95,8 @@ class _AnimatedRadhaTextWidgetState extends State<AnimatedRadhaTextWidget>
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: widget.position.dx,
-      top: widget.position.dy - 100, // Start higher above the tap point
+      left: widget.position.dx - 30,
+      top: widget.position.dy - 30,
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {

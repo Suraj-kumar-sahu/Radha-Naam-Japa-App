@@ -211,4 +211,100 @@ class FirestoreService {
       await prefs.setBool('firestore_migrated_${user.uid}', true);
     }
   }
+
+  /// Get current user's sessions for statistics
+  static Future<List<Map<String, dynamic>>> getCurrentUserSessions() async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    final query = await _firestore
+        .collection(_sessionsCollection)
+        .where('uid', isEqualTo: user.uid)
+        .orderBy('timestamp', descending: true)
+        .get();
+
+    return query.docs.map((doc) => doc.data()).toList();
+  }
+
+  /// Get user progress data for analytics (grouped by period)
+  static Future<Map<String, List<Map<String, dynamic>>>> getUserProgressData({
+    required String period, // 'weekly', 'monthly', 'yearly'
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) return {};
+
+    final sessions = await getCurrentUserSessions();
+    final Map<String, List<Map<String, dynamic>>> groupedData = {};
+
+    for (final session in sessions) {
+      final timestamp = DateTime.tryParse(session['date'] ?? '') ?? DateTime.now();
+      final count = session['count'] as int? ?? 0;
+      String key;
+
+      switch (period) {
+        case 'weekly':
+          final weekStart = timestamp.subtract(Duration(days: timestamp.weekday - 1));
+          key = '${weekStart.year}-${weekStart.month.toString().padLeft(2, '0')}-W${weekStart.day.toString().padLeft(2, '0')}';
+          break;
+        case 'monthly':
+          key = '${timestamp.year}-${timestamp.month.toString().padLeft(2, '0')}';
+          break;
+        case 'yearly':
+          key = timestamp.year.toString();
+          break;
+        default:
+          continue;
+      }
+
+      if (!groupedData.containsKey(key)) {
+        groupedData[key] = [];
+      }
+      groupedData[key]!.add({'date': timestamp, 'count': count});
+    }
+
+    // Aggregate counts per period
+    final aggregatedData = <String, List<Map<String, dynamic>>>{};
+    for (final entry in groupedData.entries) {
+      final totalCount = entry.value.fold(0, (sum, item) => sum + (item['count'] as int));
+      aggregatedData[entry.key] = [{'day': entry.key, 'count': totalCount}];
+    }
+
+    return aggregatedData;
+  }
+
+  /// Get user calendar data for the specified month
+  static Future<Map<DateTime, String>> getUserCalendarData(int year, int month) async {
+    final user = _auth.currentUser;
+    if (user == null) return {};
+
+    final startOfMonth = DateTime(year, month, 1);
+    final endOfMonth = DateTime(year, month + 1, 1).subtract(const Duration(days: 1));
+
+    final query = await _firestore
+        .collection(_sessionsCollection)
+        .where('uid', isEqualTo: user.uid)
+        .where('timestamp', isGreaterThanOrEqualTo: startOfMonth)
+        .where('timestamp', isLessThanOrEqualTo: endOfMonth)
+        .get();
+
+    final Map<DateTime, int> dailyCounts = {};
+    for (final doc in query.docs) {
+      final data = doc.data();
+      final timestamp = DateTime.tryParse(data['date'] ?? '') ?? DateTime.now();
+      final normalizedDate = DateTime(timestamp.year, timestamp.month, timestamp.day);
+      final count = data['count'] as int? ?? 0;
+      dailyCounts[normalizedDate] = (dailyCounts[normalizedDate] ?? 0) + count;
+    }
+
+    final Map<DateTime, String> statusMap = {};
+    for (final entry in dailyCounts.entries) {
+      if (entry.value > 0) {
+        statusMap[entry.key] = 'completed';
+      } else {
+        statusMap[entry.key] = 'missed';
+      }
+    }
+
+    return statusMap;
+  }
 }

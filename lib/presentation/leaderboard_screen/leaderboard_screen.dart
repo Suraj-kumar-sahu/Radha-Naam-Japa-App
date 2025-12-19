@@ -222,14 +222,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           MyRankingButtonWidget(
             onPressed: _showMyRankingModal,
           ),
-          CustomBottomBar(
+          CustomBottomBar.withNavigation(
+            context: context,
             currentIndex: 2,
-            onTap: (index) {
-              final routes = ['/home-screen', '/statistics-screen', '/leaderboard-screen', '/settings-screen'];
-              if (index >= 0 && index < routes.length) {
-                Navigator.pushReplacementNamed(context, routes[index]);
-              }
-            },
           ),
         ],
       ),

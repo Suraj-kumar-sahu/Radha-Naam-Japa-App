@@ -5,6 +5,7 @@ import 'package:sizer/sizer.dart';
 import '../../../core/app_export.dart';
 import '../../../widgets/custom_icon_widget.dart';
 import '../../../widgets/custom_tab_bar.dart';
+import '../../../services/japa_storage_service.dart';
 
 /// Progress analytics section with time period tabs and bar chart
 class ProgressAnalyticsWidget extends StatefulWidget {

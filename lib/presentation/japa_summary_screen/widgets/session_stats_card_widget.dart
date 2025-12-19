@@ -56,119 +56,125 @@ class _SessionStatsCardWidgetState extends State<SessionStatsCardWidget>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
-      child: Column(
-        children: [
-          // Circular progress ring with count
-          SizedBox(
-            width: 60.w,
-            height: 60.w,
-            child: AnimatedBuilder(
-              animation: _progressAnimation,
-              builder: (context, child) {
-                return Stack(
-                  alignment: Alignment.center,
+    return Center(
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Circular progress ring with count
+            SizedBox(
+              width: 60.w,
+              height: 60.w,
+              child: AnimatedBuilder(
+                animation: _progressAnimation,
+                builder: (context, child) {
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Background circle
+                      SizedBox(
+                        width: 60.w,
+                        height: 60.w,
+                        child: CircularProgressIndicator(
+                          value: 1.0,
+                          strokeWidth: 14,
+                          backgroundColor: Colors.white.withOpacity(0.3),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white.withOpacity(0.3),
+                          ),
+                        ),
+                      ),
+                      // Progress circle with bright color
+                      SizedBox(
+                        width: 60.w,
+                        height: 60.w,
+                        child: CircularProgressIndicator(
+                          value: _progressAnimation.value,
+                          strokeWidth: 14,
+                          backgroundColor: Colors.transparent,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.orangeAccent,
+                          ),
+                        ),
+                      ),
+                      // Center count and label
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.totalJapaCount.toString(),
+                            style: theme.textTheme.displayLarge?.copyWith(
+                              fontSize: 56.sp,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 1.h),
+                          Text(
+                            'Total Japa',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+
+            SizedBox(height: 4.h),
+
+            // Malas completed section with medal icon
+            Center(
+              child: Container(
+                padding: EdgeInsets.all(4.w),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withOpacity(0.2)),
+                ),
+                child: Column(
                   children: [
-                    // Background circle
-                    SizedBox(
-                      width: 60.w,
-                      height: 60.w,
-                      child: CircularProgressIndicator(
-                        value: 1.0,
-                        strokeWidth: 14,
-                        backgroundColor: Colors.grey[200],
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.grey[200]!,
-                        ),
+                    // Medal icon
+                    Container(
+                      padding: EdgeInsets.all(3.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: CustomIconWidget(
+                        iconName: 'emoji_events',
+                        color: Colors.white,
+                        size: 32,
                       ),
                     ),
-                    // Progress circle with orange gradient color
-                    SizedBox(
-                      width: 60.w,
-                      height: 60.w,
-                      child: CircularProgressIndicator(
-                        value: _progressAnimation.value,
-                        strokeWidth: 14,
-                        backgroundColor: Colors.transparent,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.colorScheme.primary,
-                        ),
+                    SizedBox(height: 2.h),
+                    // Malas count
+                    Text(
+                      '${widget.malaCount} Malas Completed',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
                     ),
-                    // Center count and label
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.totalJapaCount.toString(),
-                          style: theme.textTheme.displayLarge?.copyWith(
-                            fontSize: 56.sp,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        SizedBox(height: 1.h),
-                        Text(
-                          'Total Japa',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: Colors.black54,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                    SizedBox(height: 1.h),
+                    // Explanation
+                    Text(
+                      'Each mala = 108 japa',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.white70,
+                      ),
                     ),
                   ],
-                );
-              },
-            ),
-          ),
-
-          SizedBox(height: 4.h),
-
-          // Malas completed section with medal icon
-          Container(
-            padding: EdgeInsets.all(4.w),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                // Medal icon
-                Container(
-                  padding: EdgeInsets.all(3.w),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: CustomIconWidget(
-                    iconName: 'emoji_events',
-                    color: theme.colorScheme.primary,
-                    size: 32,
-                  ),
                 ),
-                SizedBox(height: 2.h),
-                // Malas count
-                Text(
-                  '${widget.malaCount} Malas Completed',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 1.h),
-                // Explanation
-                Text(
-                  'Each mala = 108 japa',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

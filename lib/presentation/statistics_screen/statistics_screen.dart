@@ -3,6 +3,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/custom_bottom_bar.dart';
+import '../../services/japa_storage_service.dart';
 import './widgets/header_card_widget.dart';
 import './widgets/info_card_widget.dart';
 import './widgets/japa_calendar_widget.dart';
@@ -16,24 +17,61 @@ class StatisticsScreen extends StatefulWidget {
   State<StatisticsScreen> createState() => _StatisticsScreenState();
 }
 
-class _StatisticsScreenState extends State<StatisticsScreen> {
-  int _currentBottomNavIndex = 1; // Statistics tab active
+class _StatisticsScreenState extends State<StatisticsScreen> with WidgetsBindingObserver {
+  final int _currentBottomNavIndex = 1; // Statistics tab active
   final ScrollController _scrollController = ScrollController();
   bool _isRefreshing = false;
+  bool _isLoading = true;
 
-  // Mock total japa count
-  final int _totalJapaCount = 86400;
+  // Total japa count from storage
+  int _totalJapaCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadTotalJapaCount();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Reload data when app comes back to foreground
+      _loadTotalJapaCount();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload data when screen comes back into focus
+    _loadTotalJapaCount();
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadTotalJapaCount() async {
+    final totalCount = await JapaStorageService.getTotalJaps();
+    if (mounted) {
+      setState(() {
+        _totalJapaCount = totalCount;
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _handleRefresh() async {
     setState(() {
       _isRefreshing = true;
     });
+
+    // Reload total japa count from storage
+    await _loadTotalJapaCount();
 
     // Simulate Firebase sync
     await Future.delayed(const Duration(seconds: 1));
@@ -92,32 +130,34 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         child: SingleChildScrollView(
           controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 1.h),
-              HeaderCardWidget(totalJapaCount: _totalJapaCount),
-              SizedBox(height: 1.h),
-              const InfoCardWidget(),
-              SizedBox(height: 2.h),
-              const ProgressAnalyticsWidget(),
-              SizedBox(height: 2.h),
-              const JapaCalendarWidget(),
-              SizedBox(height: 2.h),
-            ],
-          ),
+          child: _isLoading
+              ? SizedBox(
+                  height: 80.h,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 1.h),
+                    HeaderCardWidget(totalJapaCount: _totalJapaCount),
+                    SizedBox(height: 1.h),
+                    const InfoCardWidget(),
+                    SizedBox(height: 2.h),
+                    const ProgressAnalyticsWidget(),
+                    SizedBox(height: 2.h),
+                    const JapaCalendarWidget(),
+                    SizedBox(height: 2.h),
+                  ],
+                ),
         ),
       ),
-      bottomNavigationBar: CustomBottomBar(
+      bottomNavigationBar: CustomBottomBar.withNavigation(
+        context: context,
         currentIndex: _currentBottomNavIndex,
-        onTap: (index) {
-          if (index != _currentBottomNavIndex) {
-            final routes = ['/home-screen', '/statistics-screen', '/leaderboard-screen', '/settings-screen'];
-            if (index >= 0 && index < routes.length) {
-              Navigator.pushReplacementNamed(context, routes[index]);
-            }
-          }
-        },
       ),
     );
   }

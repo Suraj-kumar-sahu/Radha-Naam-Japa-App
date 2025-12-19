@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/custom_app_bar.dart';
+import '../../widgets/custom_bottom_bar.dart';
 import '../../widgets/custom_icon_widget.dart';
 import './widgets/inspirational_quote_widget.dart';
 import './widgets/session_stats_card_widget.dart';
@@ -15,6 +18,7 @@ class JapaSummaryScreen extends StatefulWidget {
 }
 
 class _JapaSummaryScreenState extends State<JapaSummaryScreen> {
+  final int _currentIndex = 0; // For bottom bar, fixed to home or something
   // Session data from navigation arguments
   int _totalJapaCount = 0;
   int _malaCount = 0;
@@ -71,7 +75,7 @@ class _JapaSummaryScreenState extends State<JapaSummaryScreen> {
   }
 
   void _handleBackToHome() {
-    Navigator.pushReplacementNamed(context, '/home-screen');
+    Navigator.pushReplacementNamed(context, '/home');
   }
 
   @override
@@ -79,73 +83,85 @@ class _JapaSummaryScreenState extends State<JapaSummaryScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header with title and close button
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Left icon (meditation symbol)
-                  Container(
-                    padding: EdgeInsets.all(2.w),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: CustomIconWidget(
-                      iconName: 'self_improvement',
-                      color: theme.colorScheme.primary,
-                      size: 24,
-                    ),
-                  ),
-                  // Title
-                  Text(
-                    'Japa Summary',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  // Close button
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: _handleBackToHome,
-                    tooltip: 'Close',
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    SizedBox(height: 3.h),
-
-                    // Circular progress with count - matching screenshot
-                    SessionStatsCardWidget(
-                      totalJapaCount: _totalJapaCount,
-                      malaCount: _malaCount,
-                    ),
-
-                    SizedBox(height: 2.h),
-
-                    // Inspirational quote - matching screenshot
-                    InspirationalQuoteWidget(
-                      quote: _currentQuote['quote']!,
-                      author: _currentQuote['author']!,
-                    ),
-
-                    SizedBox(height: 3.h),
-                  ],
-                ),
-              ),
-            ),
-          ],
+      extendBody: true,
+      appBar: CustomAppBar(
+        height: 0,
+      ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: AppTheme.cosmicNebulaGradient,
         ),
+        child: SafeArea(
+          bottom: false,
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: 4.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 1.h),
+                // Header with title and close button
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 2.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Left icon (meditation symbol)
+                      Container(
+                        padding: EdgeInsets.all(2.w),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: CustomIconWidget(
+                          iconName: 'self_improvement',
+                          color: theme.colorScheme.primary,
+                          size: 24,
+                        ),
+                      ),
+                      // Title
+                      Text(
+                        'Japa Summary',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      // Close button
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: _handleBackToHome,
+                        tooltip: 'Close',
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 3.h),
+
+                // Circular progress with count - matching screenshot
+                SessionStatsCardWidget(
+                  totalJapaCount: _totalJapaCount,
+                  malaCount: _malaCount,
+                ),
+
+                SizedBox(height: 2.h),
+
+                // Inspirational quote - matching screenshot
+                InspirationalQuoteWidget(
+                  quote: _currentQuote['quote']!,
+                  author: _currentQuote['author']!,
+                ),
+
+                SizedBox(height: 12.h),
+              ],
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: CustomBottomBar.withNavigation(
+        context: context,
+        currentIndex: _currentIndex,
       ),
     );
   }

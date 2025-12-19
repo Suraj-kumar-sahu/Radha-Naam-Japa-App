@@ -114,9 +114,9 @@ class _SplashScreenState extends State<SplashScreen>
       final bool isAuthenticated = currentUser != null;
 
       if (isAuthenticated) {
-        Navigator.pushReplacementNamed(context, '/home-screen');
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
       } else {
-        Navigator.pushReplacementNamed(context, '/login-screen');
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
     });
   }
@@ -147,14 +147,7 @@ class _SplashScreenState extends State<SplashScreen>
           width: double.infinity,
           height: double.infinity,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppTheme.goldRadiance,
-                AppTheme.glowGold,
-              ],
-            ),
+            gradient: AppTheme.cosmicNebulaGradient,
           ),
           child: SafeArea(
             child: Column(

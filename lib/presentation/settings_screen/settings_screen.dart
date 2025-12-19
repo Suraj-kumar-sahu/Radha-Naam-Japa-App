@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../services/japa_storage_service.dart';
 import '../../widgets/custom_bottom_bar.dart';
+import '../../theme/app_theme.dart';
 import './widgets/profile_card_widget.dart';
 import './widgets/settings_item_widget.dart';
 import './widgets/settings_section_widget.dart';
@@ -83,7 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: theme.scaffoldBackgroundColor,
         body: Center(
           child: CircularProgressIndicator(
-            color: const Color(0xFFFF6B35),
+            color: AppTheme.goldRadiance,
           ),
         ),
       );
@@ -126,7 +127,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     SettingsItemWidget(
                       icon: Icons.vibration,
-                      iconColor: const Color(0xFFFF6B35),
+                      iconColor: AppTheme.goldRadiance,
                       title: 'Vibration',
                       subtitle: 'Haptic feedback on count',
                       trailing: Switch(
@@ -135,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           HapticFeedback.lightImpact();
                           setState(() => _isVibrationEnabled = value);
                         },
-                        activeColor: const Color(0xFFFF6B35),
+                        activeColor: AppTheme.goldRadiance,
                       ),
                     ),
                   ],
@@ -149,21 +150,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     SettingsItemWidget(
                       icon: Icons.settings,
-                      iconColor: const Color(0xFFFF6B35),
+                      iconColor: AppTheme.goldRadiance,
                       title: 'App Settings',
                       onTap: () =>
                           Navigator.pushNamed(context, '/app-settings-screen'),
                     ),
                     SettingsItemWidget(
                       icon: Icons.notifications,
-                      iconColor: const Color(0xFFFF6B35),
+                      iconColor: AppTheme.goldRadiance,
                       title: 'Notification',
                       onTap: () =>
                           Navigator.pushNamed(context, '/notification-screen'),
                     ),
                     SettingsItemWidget(
                       icon: Icons.help_outline,
-                      iconColor: const Color(0xFFFF6B35),
+                      iconColor: AppTheme.goldRadiance,
                       title: 'Help & Support',
                       onTap: () => _showHelpSupportModal(),
                     ),
@@ -178,26 +179,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     SettingsItemWidget(
                       icon: Icons.feedback_outlined,
-                      iconColor: const Color(0xFFFF6B35),
+                      iconColor: AppTheme.goldRadiance,
                       title: 'Send Feedback',
                       onTap: () => _showFeedbackModal(),
                     ),
                     SettingsItemWidget(
                       icon: Icons.lightbulb_outline,
-                      iconColor: const Color(0xFFFFD23F),
+                      iconColor: AppTheme.glowGold,
                       title: 'Feature Suggestion',
                       onTap: () =>
                           _showFeedbackModal(isFeatureSuggestion: true),
                     ),
                     SettingsItemWidget(
                       icon: Icons.star,
-                      iconColor: const Color(0xFFFFD23F),
+                      iconColor: AppTheme.glowGold,
                       title: 'Write a Review',
                       onTap: () => _handleWriteReview(),
                     ),
                     SettingsItemWidget(
                       icon: Icons.share,
-                      iconColor: const Color(0xFFFF6B35),
+                      iconColor: AppTheme.goldRadiance,
                       title: 'Share App',
                       onTap: () => _handleShareApp(),
                     ),
@@ -212,19 +213,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     SettingsItemWidget(
                       icon: Icons.camera_alt,
-                      iconColor: const Color(0xFF833AB4),
+                      iconColor: AppTheme.indigoAura,
                       title: 'Visit on Instagram',
                       onTap: () => _launchUrl('https://instagram.com'),
                     ),
                     SettingsItemWidget(
                       icon: Icons.language,
-                      iconColor: const Color(0xFFFF6B35),
+                      iconColor: AppTheme.goldRadiance,
                       title: 'Visit on Website',
                       onTap: () => _launchUrl('https://example.com'),
                     ),
                     SettingsItemWidget(
                       icon: Icons.privacy_tip,
-                      iconColor: const Color(0xFFFF6B35),
+                      iconColor: AppTheme.goldRadiance,
                       title: 'Privacy Policy',
                       onTap: () => _launchUrl('https://example.com/privacy'),
                     ),
@@ -269,24 +270,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: CustomBottomBar(
+      bottomNavigationBar: CustomBottomBar.withNavigation(
+        context: context,
         currentIndex: 3,
-        onTap: (index) {
-          HapticFeedback.lightImpact();
-          if (index != 3) {
-            _navigateToTab(index);
-          }
-        },
       ),
     );
   }
 
-  void _navigateToTab(int index) {
-    final routes = ['/home-screen', '/statistics-screen', '/leaderboard-screen', '/settings-screen'];
-    if (index >= 0 && index < routes.length) {
-      Navigator.pushReplacementNamed(context, routes[index]);
-    }
-  }
+
 
   void _showHelpSupportModal() {
     HapticFeedback.lightImpact();
@@ -337,7 +328,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFFF6B35)),
+                        side: const BorderSide(color: AppTheme.goldRadiance),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -345,7 +336,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       child: Text(
                         'Cancel',
-                        style: TextStyle(color: Color(0xFFFF6B35)),
+                        style: TextStyle(color: AppTheme.goldRadiance),
                       ),
                     ),
                   ),
@@ -418,7 +409,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             onPressed: () => Navigator.pop(context),
                             child: Text(
                               'Cancel',
-                              style: TextStyle(color: Color(0xFFFF6B35)),
+                              style: TextStyle(color: AppTheme.goldRadiance),
                             ),
                           ),
                           ElevatedButton(
@@ -469,7 +460,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Color(0xFFFF6B35)),
+                        borderSide: BorderSide(color: AppTheme.goldRadiance),
                       ),
                       counterText: '',
                     ),
@@ -594,7 +585,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Thank you for your feedback!'),
-        backgroundColor: const Color(0xFFFF6B35),
+        backgroundColor: AppTheme.goldRadiance,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -606,7 +597,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Opening app store...'),
-        backgroundColor: const Color(0xFFFF6B35),
+        backgroundColor: AppTheme.goldRadiance,
         behavior: SnackBarBehavior.floating,
       ),
     );

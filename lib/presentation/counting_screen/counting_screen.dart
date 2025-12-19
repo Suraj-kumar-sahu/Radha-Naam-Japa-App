@@ -1,17 +1,19 @@
 import 'dart:async';
+import 'dart:ui';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 
-import '../../core/app_export.dart';
-import '../../widgets/custom_app_bar.dart';
-import '../../widgets/custom_icon_widget.dart';
-import '../../theme/app_theme.dart'; // Import theme
-import '../save_confirmation_modal/save_confirmation_modal.dart'; // Import the Modal
 import './widgets/animated_radha_text_widget.dart';
 import './widgets/circular_progress_widget.dart';
+import './widgets/flower_rain_widget.dart';
 import './widgets/save_japa_button_widget.dart';
+import '../../widgets/custom_app_bar.dart';
+import '../../widgets/custom_icon_widget.dart';
+import '../../theme/app_theme.dart';
+import '../save_confirmation_modal/save_confirmation_modal.dart';
 import '../../services/japa_storage_service.dart';
 
 class CountingScreen extends StatefulWidget {
@@ -33,6 +35,7 @@ class _CountingScreenState extends State<CountingScreen>
   bool _isAudioInitialized = false;
 
   final List<AnimatedRadhaTextData> _radhaAnimations = [];
+  final List<FlowerRainData> _flowerRainAnimations = [];
   int _animationIdCounter = 0;
   late AnimationController _pulseController;
 
@@ -81,6 +84,7 @@ class _CountingScreenState extends State<CountingScreen>
   }
 
   Future<void> _handleTap(TapDownDetails details) async {
+    final previousCount = _currentCount;
     setState(() => _currentCount++);
     if (!_isMuted && _isAudioInitialized) {
       try {
@@ -90,6 +94,11 @@ class _CountingScreenState extends State<CountingScreen>
     }
     HapticFeedback.lightImpact();
     _createRadhaAnimation(details.globalPosition);
+
+    // Check if a mala is completed
+    if (previousCount % 108 != 0 && _currentCount % 108 == 0) {
+      _createFlowerRain();
+    }
   }
 
   void _createRadhaAnimation(Offset position) {
@@ -101,6 +110,28 @@ class _CountingScreenState extends State<CountingScreen>
       if (mounted) {
         setState(() {
           _radhaAnimations.removeWhere((anim) => anim.id == animationId);
+        });
+      }
+    });
+  }
+
+  void _createFlowerRain() {
+    final animationId = _animationIdCounter++;
+    final screenSize = MediaQuery.of(context).size;
+    final centerPosition = Offset(screenSize.width / 2, screenSize.height / 2);
+
+    setState(() {
+      _flowerRainAnimations.add(FlowerRainData(
+        id: animationId,
+        centerPosition: centerPosition,
+        screenWidth: screenSize.width,
+        screenHeight: screenSize.height,
+      ));
+    });
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() {
+          _flowerRainAnimations.removeWhere((anim) => anim.id == animationId);
         });
       }
     });
@@ -220,6 +251,12 @@ class _CountingScreenState extends State<CountingScreen>
                   key: ValueKey(data.id),
                   position: data.position,
                 )),
+            ..._flowerRainAnimations.map((data) => FlowerRainWidget(
+                  key: ValueKey(data.id),
+                  centerPosition: data.centerPosition,
+                  screenWidth: data.screenWidth,
+                  screenHeight: data.screenHeight,
+                )),
           ],
         ),
       ),
@@ -229,28 +266,33 @@ class _CountingScreenState extends State<CountingScreen>
   Widget _buildSessionHeader() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-      child: Column(
-        children: [
-          Text(
+      child: Center(
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.5.h),
+          decoration: BoxDecoration(
+            color: AppTheme.deepMysticBlack.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(25.sp),
+            border: Border.all(
+              color: AppTheme.goldRadiance.withOpacity(0.3),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.goldRadiance.withOpacity(0.1),
+                blurRadius: 10.sp,
+                spreadRadius: 1.sp,
+              ),
+            ],
+          ),
+          child: Text(
             _sessionDuration,
-            style: AppTheme.darkTheme.textTheme.headlineSmall?.copyWith(
+            style: AppTheme.darkTheme.textTheme.headlineMedium?.copyWith(
               color: AppTheme.ashGray,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
             ),
           ),
-          SizedBox(height: 1.h),
-          Text(
-            _currentCount.toString(),
-            style: AppTheme.glowTextStyle.copyWith(fontSize: 48.sp),
-          ),
-          SizedBox(height: 0.5.h),
-          Text(
-            '${_currentCount ~/ 108} Malas + ${_currentCount % 108} Japas',
-            style: AppTheme.darkTheme.textTheme.bodyLarge?.copyWith(
-              color: AppTheme.goldRadiance,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -260,4 +302,17 @@ class AnimatedRadhaTextData {
   final int id;
   final Offset position;
   AnimatedRadhaTextData({required this.id, required this.position});
+}
+
+class FlowerRainData {
+  final int id;
+  final Offset centerPosition;
+  final double screenWidth;
+  final double screenHeight;
+  FlowerRainData({
+    required this.id,
+    required this.centerPosition,
+    required this.screenWidth,
+    required this.screenHeight,
+  });
 }

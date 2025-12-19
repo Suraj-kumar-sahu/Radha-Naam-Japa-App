@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../theme/app_theme.dart';
 import '../../../widgets/custom_icon_widget.dart';
 
 class ProfileCardWidget extends StatelessWidget {
@@ -23,13 +24,15 @@ class ProfileCardWidget extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
-      elevation: 2,
+      elevation: 4,
+      shadowColor: AppTheme.glowGold.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24.0),
+        side: BorderSide(color: AppTheme.dustGold.withValues(alpha: 0.3), width: 1),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24.0),
         child: Padding(
           padding: EdgeInsets.all(4.w),
           child: Row(
@@ -39,7 +42,7 @@ class ProfileCardWidget extends StatelessWidget {
                 width: 15.w,
                 height: 15.w,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFB91C5C),
+                  color: AppTheme.indigoAura,
                   shape: BoxShape.circle,
                 ),
                 child: Center(

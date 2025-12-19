@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import '../../../theme/app_theme.dart';
 
 class SettingsSectionWidget extends StatelessWidget {
   final String title;
@@ -19,20 +20,40 @@ class SettingsSectionWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
+          padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.5.h),
           child: Text(
             title,
             style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
+              color: AppTheme.goldRadiance,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+              shadows: [
+                Shadow(
+                  color: AppTheme.goldRadiance.withValues(alpha: 0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
             ),
           ),
         ),
-        Card(
-          elevation: 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: 2.w),
+          decoration: BoxDecoration(
+            color: AppTheme.cosmicBlackMist,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppTheme.dustGold.withValues(alpha: 0.3),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.goldRadiance.withValues(alpha: 0.05),
+                blurRadius: 20,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             children: children,

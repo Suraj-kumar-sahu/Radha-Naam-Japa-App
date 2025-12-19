@@ -65,25 +65,25 @@ class CustomBottomBar extends StatelessWidget {
       icon: Icons.home_outlined,
       activeIcon: Icons.home,
       label: 'Home',
-      route: '/home-screen',
+      route: '/home',
     ),
     BottomNavItem(
       icon: Icons.bar_chart_outlined,
       activeIcon: Icons.bar_chart,
       label: 'Statistics',
-      route: '/statistics-screen',
+      route: '/statistics',
     ),
     BottomNavItem(
       icon: Icons.emoji_events_outlined,
       activeIcon: Icons.emoji_events,
       label: 'Leaderboard',
-      route: '/leaderboard-screen',
+      route: '/leaderboard',
     ),
     BottomNavItem(
       icon: Icons.settings_outlined,
       activeIcon: Icons.settings,
       label: 'Settings',
-      route: '/settings-screen',
+      route: '/settings',
     ),
   ];
 
@@ -234,8 +234,8 @@ class CustomBottomBar extends StatelessWidget {
       elevation: elevation,
       backgroundColor: backgroundColor,
       onTap: (index) {
-        // Navigate to the selected route
-        Navigator.pushNamed(context, _navItems[index].route);
+        // Navigate to the selected route, replacing current screen
+        Navigator.pushReplacementNamed(context, _navItems[index].route);
       },
     );
   }
@@ -245,7 +245,7 @@ class CustomBottomBar extends StatelessWidget {
     if (index >= 0 && index < _navItems.length) {
       return _navItems[index].route;
     }
-    return '/home-screen';
+    return '/home';
   }
 
   /// Helper method to get index for current route
